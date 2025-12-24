@@ -191,9 +191,12 @@ class Kibitzer:
         self.scores:dict[str, float] = {PLAYERS[0]: -10000000000, PLAYERS[1]: 10000000000, 'tie': 0}
     
     # Simple implementation of the minimax function
-    def minimax(self, game: Game, depth: int, maximizing_player: bool) -> Move:
+    def minimax(self, game: Game, depth: int, alpha: float, beta: float, maximizing_player: bool) -> Move:
         """if depth == 0 or game.over:
-            return game.evaluation"""
+            return game.evaluation
+            Use a better algorithm to evaluate the board if there is no win
+            ex: how close one player is from winning    
+        """
         player = check_side(game.ply)
         if game.won:
             if maximizing_player:
@@ -210,11 +213,13 @@ class Kibitzer:
             for spot in moves:
                 # Check if the spot is available
                 last_move = game.make_move(get_column(spot), player)
-                eval = self.minimax(game, depth - 1, False).score
+                eval = self.minimax(game, depth - 1, alpha, beta, False).score
                 game.revert_last_move(spot)
                 if eval > max_eval:
                     max_eval = eval
                     best_move = last_move
+                alpha = max(alpha, eval)
+                if beta <= alpha: break
             
             return Move(max_eval, best_move, player)
         
@@ -224,19 +229,24 @@ class Kibitzer:
             for spot in moves:
                 # Check if the spot is available
                 last_move = game.make_move(get_column(spot), player)
-                eval = self.minimax(game, depth - 1, False).score
+                eval = self.minimax(game, depth - 1, alpha, beta, False).score
                 game.revert_last_move(spot)
                 if eval < min_eval:
                     min_eval = eval
                     best_move = last_move
+                beta = min(beta, eval)
+                if beta <= alpha: break
             return Move(min_eval, best_move, player)
-            
 
     # Get the best move using the minimax function
     def best_move(self, game: Game) -> int:
+        """
+        Add a transposition table to check if the position has been evaluated before
+        Check this before calling minimax
+        """
         # If its early in the game try to play in the center since that is favorable
         if game.ply <= 3: best_move = game.check_for_center_move()
-        else :best_move = self.minimax(game, 7, True).position
+        else :best_move = self.minimax(game, 8, float('-inf'), float('inf'), True).position
         pprint.pprint(f"best move: {best_move}")
         return best_move
 
