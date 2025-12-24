@@ -1,10 +1,5 @@
 import os
-
-ROW_COUNT = 6
-COLUMN_COUNT = 7
-BOARD_SIZE = ROW_COUNT * COLUMN_COUNT
-WINNING_STREAK = 4
-PLAYERS = {0:"X", 1:"O"}
+from enum import Enum
 
 class terminal_colors:
     HEADER = '\033[95m'
@@ -17,16 +12,29 @@ class terminal_colors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+ROW_COUNT = 6
+COLUMN_COUNT = 7
+BOARD_SIZE = ROW_COUNT * COLUMN_COUNT
+WINNING_STREAK = 4
+PLAYERS = {0:"X", 1:"O"}
+
+class Messages(Enum):
+    INVALID_MOVE = f"{terminal_colors.FAIL}Invalid move{terminal_colors.END_C}"
+    INVALID_INPUT = f"{terminal_colors.FAIL}Invalid input{terminal_colors.END_C}"
+    INVALID_OPTION = f"{terminal_colors.FAIL}Invalid option{terminal_colors.END_C}"
+    COLUMN_FULL = f"{terminal_colors.WARNING}Warning: Column full{terminal_colors.END_C}"
+    GAME_TERMINATED = f"{terminal_colors.OK_CYAN}{terminal_colors.BOLD}GAME TERMINATED{terminal_colors.END_C}"
+
 # Print the current board to the terminal
 def draw_board(board: list[str], last_move: int=-1):
     os.system('cls' if os.name == 'nt' else 'clear')
-    for i in range(COLUMN_COUNT):
-        print(f"  {i}", end="")
-    print(" ")
     for i, spot in enumerate(board):
         spot = format_player(spot)
         if (i+1) % COLUMN_COUNT == 0: print("|" + spot + "|")
         else: print("|" + spot, end="")
+    for i in range(COLUMN_COUNT):
+        print(f"  {i}", end="")
+    print(" ")
     if last_move >= 0: print(f"Last move: {last_move}")
 
 # Check what player has the turn
@@ -81,7 +89,7 @@ def check_win(board: list[str], pos: int, player:str) -> bool:
     if (4 <= i <= ROW_COUNT) or i == 21 or i == 28 or i == 35:
         i = BOARD_SIZE
 
-    while i < 38:
+    while i < BOARD_SIZE:
         if board[i] == player:
             match_count += 1
             if match_count == WINNING_STREAK: return True
@@ -121,7 +129,7 @@ def get_column(move: int):
 
 
 def diagonal_up_left(position: int) -> int:
-    return position - COLUMN_COUNT + 1
+    return position - COLUMN_COUNT - 1
 
 def diagonal_down_right(position: int) -> int:
     return position + COLUMN_COUNT + 1
